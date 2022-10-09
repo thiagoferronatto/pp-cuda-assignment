@@ -20,7 +20,12 @@ __device__ inline void CalcCell(const types::Base* sequence_r,
                                 const types::Base* sequence_s, types::U16 i,
                                 types::U16 j, types::U16 r_length,
                                 types::U16* dp_table) {
-  // Recurrence relation for the DP algorithm
+  // Recurrence relation for the DP algorithm is
+  // d(i, j) = min{
+  //   d(i, j - 1) + 1,
+  //   d(i - 1, j - 1) + {0 if s[i] = r[i], 1 otherwise},
+  //   d(i - 1, j) + 1
+  // }
   const types::U16& left = dp_table[i * (r_length + 1) + j - 1] + 1;
   const types::U16& top_left = dp_table[(i - 1) * (r_length + 1) + j - 1] +
                                (sequence_s[i - 1] != sequence_r[j - 1]);
