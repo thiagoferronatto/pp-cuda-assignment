@@ -32,7 +32,7 @@ __device__ inline void CalcCell(const types::Base* sequence_r,
   const types::U16& top = dp_table[(i - 1) * (r_length + 1) + j] + 1;
 
   // Actually applying the relation and storing the result in (i, j)
-  dp_table[i * (r_length + 1) + j] = min(min(left, top), top_left);
+  dp_table[i * (r_length + 1) + j] = umin(umin(left, top), top_left);
 }
 
 __global__ void SolveDPP(const types::Base* sequence_r,
