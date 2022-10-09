@@ -1,0 +1,7 @@
+.vscode
+*.csv
+*.lib
+*.pdb
+*.exp
+*.exe
+*.obj
