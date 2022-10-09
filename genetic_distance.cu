@@ -100,6 +100,8 @@ __host__ types::U16* LaunchKernel(const types::Base* h_sequence_r,
       cudaLaunchCooperativeKernel(SolveDPP, grid_size, kBlockSize, args, 0, 0));
 
   // Transferring output data from device to host
+  // TODO: currently transferring the whole matrix; should transfer only the
+  // last element, fix before submitting
   types::U16* h_result = new types::U16[size];
   CHECK(cudaMemcpy(h_result, d_dp_table, size * sizeof(types::U16),
                    cudaMemcpyDeviceToHost));
