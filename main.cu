@@ -1,7 +1,3 @@
-#include <cmath>
-#include <cstdint>
-#include <cstdio>
-
 #include "genetic_distance.cuh"
 
 int main(int argc, char** argv, char** envp) {
