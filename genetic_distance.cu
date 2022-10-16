@@ -1,5 +1,7 @@
 #include <cooperative_groups.h>
 
+#include <cstdio>
+
 #include "genetic_distance.cuh"
 
 #define CHECK(ans) \
