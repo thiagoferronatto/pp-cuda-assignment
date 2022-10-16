@@ -30,7 +30,7 @@ __device__ inline void CalcCell(const types::Base* sequence_r,
   // }
   const types::U16 left = dp_table[i * (r_length + 1) + j - 1] + 1;
   const types::U16 top_left = dp_table[(i - 1) * (r_length + 1) + j - 1] +
-                              (sequence_s[j - 1] != sequence_r[i - 1]);
+                              (sequence_s[i - 1] != sequence_r[j - 1]);
   const types::U16 top = dp_table[(i - 1) * (r_length + 1) + j] + 1;
 
   // Actually applying the relation and storing the result in (i, j)
@@ -98,8 +98,8 @@ __host__ types::U16* LaunchKernel(const types::Base* h_sequence_r,
 
   // Preparing arguments for cooperative kernel launch
   void** args = new void*[5];
-  args[0] = &d_sequence_s;
-  args[1] = &d_sequence_r;
+  args[0] = &d_sequence_r;
+  args[1] = &d_sequence_s;
   args[2] = &r_length;
   args[3] = &s_length;
   args[4] = &d_dp_table;
