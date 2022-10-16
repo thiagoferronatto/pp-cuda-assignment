@@ -10,7 +10,7 @@ program: $(OBJ)
 
 clean:
 ifeq ($(OS), Windows_NT)
-	del /Q *.obj *.exe *.exp *.lib *.pdb
+	del /Q *.obj *.exe *.exp *.lib *.pdb *.txt
 else
-	rm -f *.obj *.exe *.exp *.lib *.pdb
+	rm -f *.obj *.exe *.exp *.lib *.pdb *.txt
 endif
