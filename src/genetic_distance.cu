@@ -1,3 +1,18 @@
+/**
+ * COMPLETE IMPLEMENTATION (MULTIPLE BLOCKS IN GRID)
+ *
+ * Please use the makefile, works perfectly both in our machines and on Colab.
+ *
+ * @file genetic_distance.cu
+ * @authors Diego F. S. Souza (diego.f.s.souza@ufms.br) and Thiago Ferronatto
+ * (thiago.ferronatto@ufms.br)
+ * @brief Implementations of the functions documented @ genetic_distance.cuh.
+ * @version 1.0
+ * @date 2022-10-18
+ *
+ * @copyright Copyright (c) 2022
+ */
+
 #include <cooperative_groups.h>
 
 #include <cstdio>

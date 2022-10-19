@@ -1,3 +1,19 @@
+/**
+ * COMPLETE IMPLEMENTATION (MULTIPLE BLOCKS IN GRID)
+ *
+ * Please use the makefile, works perfectly both in our machines and on Colab.
+ *
+ * @file genetic_distance.cuh
+ * @authors Diego F. S. Souza (diego.f.s.souza@ufms.br) and Thiago Ferronatto
+ * (thiago.ferronatto@ufms.br)
+ * @brief Prototypes and docs of the functions implemented @
+ * genetic_distance.cuh.
+ * @version 1.0
+ * @date 2022-10-18
+ *
+ * @copyright Copyright (c) 2022
+ */
+
 #ifndef CUDA_ASSIGNMENT_GENETIC_DISTANCE_CUH_
 #define CUDA_ASSIGNMENT_GENETIC_DISTANCE_CUH_
 
