@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <ctime>
 
 #include "../include/genetic_distance.cuh"
 
@@ -14,14 +15,14 @@ int main(int argc, char** argv, char** envp) {
 
   // Reading lengths of both DNA sequences
   ca::types::U16 s_length, r_length;
-  (void)fscanf(input_file_header, "%hu %hu", &s_length, &r_length);
-  (void)fgetc(input_file_header);
+  fscanf(input_file_header, "%hu %hu", &s_length, &r_length);
+  fgetc(input_file_header);
 
   // Reading shorter DNA sequence
   ca::types::Base* sequence_s = new ca::types::Base[s_length];
   for (ca::types::U16 i = 0; i < s_length; i++)
     sequence_s[i] = (ca::types::Base)fgetc(input_file_header);
-  (void)fgetc(input_file_header);
+  fgetc(input_file_header);
 
   // Reading longer DNA sequence
   ca::types::Base* sequence_r = new ca::types::Base[r_length];
@@ -31,20 +32,17 @@ int main(int argc, char** argv, char** envp) {
   // Cleaning up
   fclose(input_file_header);
 
+  // Using C's internal clock for perf measuring, fight me
+  clock_t start = clock();
+
   // All the boilerplate for launching the kernel
-  const ca::types::U16* result =
+  const ca::types::U16 result =
       ca::algorithm::LaunchKernel(sequence_r, sequence_s, r_length, s_length);
 
-  // TODO: remove this, prints the whole DP matrix
-  // for (auto i = 0U; i <= s_length; i++) {
-  //   for (auto j = 0U; j <= r_length; j++)
-  //     printf("%u%s", result[i * (r_length + 1) + j], j == r_length ? "" :
-  //     ",");
-  //   puts("");
-  // }
+  clock_t end = clock();
 
-  // TODO: measure and print exec time
-  printf("%hu\n", result[s_length * (r_length + 1) + r_length]);
+  // Finally printing the results
+  printf("%hu\n%ld\n", result, end - start);
 
   return 0;
 }

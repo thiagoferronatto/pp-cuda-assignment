@@ -58,6 +58,7 @@ __global__ void SolveDPP(const types::Base* sequence_r,
   for (types::U16 d = 2, i, j; d < s_length + r_length + 1; d++) {
     types::U16 grids_per_diag = (s_length + grid_size - 1) / grid_size;
 
+    // Slides the grid along anti-diagonal d
     for (types::U16 k = 0; k < grids_per_diag; k++) {
       types::U16 curr_id = global_id + k * grid_size;
 
@@ -72,9 +73,9 @@ __global__ void SolveDPP(const types::Base* sequence_r,
   }
 }
 
-__host__ types::U16* LaunchKernel(const types::Base* h_sequence_r,
-                                  const types::Base* h_sequence_s,
-                                  types::U16 r_length, types::U16 s_length) {
+__host__ types::U16 LaunchKernel(const types::Base* h_sequence_r,
+                                 const types::Base* h_sequence_s,
+                                 types::U16 r_length, types::U16 s_length) {
   const types::U32 size = (s_length + 1) * (r_length + 1);
 
   // Allocating global device memory for the table and the two sequences
@@ -91,16 +92,17 @@ __host__ types::U16* LaunchKernel(const types::Base* h_sequence_r,
   CHECK(cudaMemcpy(d_sequence_s, h_sequence_s, s_length * sizeof(types::Base),
                    cudaMemcpyHostToDevice));
 
+  // This seems like a generally good number of threads per block
   constexpr types::U16 block_size = 256;
 
   // Accessing device properties
   cudaDeviceProp device_prop;
-  cudaGetDeviceProperties(&device_prop, 0);
+  CHECK(cudaGetDeviceProperties(&device_prop, 0));
 
   // Getting exact number of blocks that can be in an SM simultaneously
   int blocks_per_sm;
-  cudaOccupancyMaxActiveBlocksPerMultiprocessor(&blocks_per_sm, SolveDPP,
-                                                block_size, 0);
+  CHECK(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&blocks_per_sm, SolveDPP,
+                                                      block_size, 0));
 
   // Optimal grid size for the job (hopefully?)
   const types::U16 grid_size = device_prop.multiProcessorCount * blocks_per_sm;
@@ -119,11 +121,9 @@ __host__ types::U16* LaunchKernel(const types::Base* h_sequence_r,
                                     (cudaStream_t)0));
 
   // Transferring output data from device to host
-  // TODO: currently copying the whole matrix; should transfer only the last
-  // element, fix before submitting
-  types::U16* h_result = new types::U16[size];
-  CHECK(cudaMemcpy(h_result, d_dp_table, size * sizeof(types::U16),
-                   cudaMemcpyDeviceToHost));
+  types::U16 h_result;
+  CHECK(cudaMemcpy(&h_result, &d_dp_table[s_length * (r_length + 1) + r_length],
+                   sizeof(types::U16), cudaMemcpyDeviceToHost));
 
   // Freeing device global memory
   CHECK(cudaFree(d_dp_table));

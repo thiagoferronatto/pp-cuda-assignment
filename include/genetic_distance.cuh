@@ -47,8 +47,8 @@ __global__ void SolveDPP(const types::Base*, const types::Base*, types::U16,
  * @param s_length Length of the second DNA sequence.
  * @return U16 Shortest genetic distance between the two sequences.
  */
-__host__ types::U16* LaunchKernel(const types::Base*, const types::Base*,
-                                  types::U16, types::U16);
+__host__ types::U16 LaunchKernel(const types::Base*, const types::Base*,
+                                 types::U16, types::U16);
 
 }  // namespace algorithm
 }  // namespace cuda_assignment
