@@ -1,16 +1,25 @@
-SRC = $(wildcard *.cu)
-OBJ = $(SRC:%.cu=%.obj)
-FLAGS = -g
+SRC = $(wildcard src/*.cu)
+OBJ = $(SRC:src/%.cu=build/%.obj)
+FLAGS = -O3
 
-program: $(OBJ)
+.PHONY: clean
+
+bin/program: $(OBJ) | bin
 	nvcc $^ -o $@ $(FLAGS)
 
-%.obj: %.cu
+build/%.obj: src/%.cu | build
 	nvcc -c $< -o $@ $(FLAGS)
+
+bin:
+	mkdir bin
+
+build:
+	mkdir build
 
 clean:
 ifeq ($(OS), Windows_NT)
-	del /Q *.obj *.exe *.exp *.lib *.pdb *.txt
+	del /Q bin build
+	rmdir bin build
 else
-	rm -f *.obj *.exe *.exp *.lib *.pdb *.txt
+	rm -rf bin build
 endif

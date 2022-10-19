@@ -1,8 +1,4 @@
 .vscode
+bin
+build
 input
-*.csv
-*.lib
-*.pdb
-*.exp
-*.exe
-*.obj

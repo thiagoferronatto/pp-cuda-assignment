@@ -2,7 +2,7 @@
 
 #include <cstdio>
 
-#include "genetic_distance.cuh"
+#include "../include/genetic_distance.cuh"
 
 #define CHECK(ans) \
   cuda_assignment::algorithm::CheckError(ans, __FILE__, __LINE__)

@@ -1,6 +1,6 @@
 #include <cstdio>
 
-#include "genetic_distance.cuh"
+#include "../include/genetic_distance.cuh"
 
 int main(int argc, char** argv, char** envp) {
   namespace ca = cuda_assignment;
