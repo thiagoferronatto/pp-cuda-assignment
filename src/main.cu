@@ -14,7 +14,7 @@ int main(int argc, char** argv, char** envp) {
 
   // Reading lengths of both DNA sequences
   ca::types::U16 s_length, r_length;
-  fscanf(input_file_header, "%hu %hu", &s_length, &r_length);
+  (void)fscanf(input_file_header, "%hu %hu", &s_length, &r_length);
   (void)fgetc(input_file_header);
 
   // Reading shorter DNA sequence
