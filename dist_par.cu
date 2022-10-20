@@ -172,16 +172,12 @@ __host__ types::U16 LaunchKernel(const types::Base* h_sequence_r,
   const types::U16 grid_size = device_prop.multiProcessorCount * blocks_per_sm;
 
   // Preparing arguments for cooperative kernel launch
-  void** args = new void*[5];
-  args[0] = &d_sequence_r;
-  args[1] = &d_sequence_s;
-  args[2] = &r_length;
-  args[3] = &s_length;
-  args[4] = &d_dp_table;
+  void* args[5]{&d_sequence_r, &d_sequence_s, &r_length, &s_length,
+                &d_dp_table};
 
   // Launching cooperative kernel
   CHECK(cudaLaunchCooperativeKernel((const void*)SolveDPP, (dim3)grid_size,
-                                    (dim3)block_size, args, (size_t)0,
+                                    (dim3)block_size, (void**)args, (size_t)0,
                                     (cudaStream_t)0));
 
   // Transferring output data from device to host
