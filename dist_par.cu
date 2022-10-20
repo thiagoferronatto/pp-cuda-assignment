@@ -1,30 +1,47 @@
 /**
  * COMPLETE IMPLEMENTATION (MULTIPLE BLOCKS IN GRID)
  *
- * Please use the makefile, works perfectly both in our machines and on Colab.
+ * Go ahead and compile with `nvcc dist_par.cu -o dist_par`
  *
- * @file genetic_distance.cu
- * @authors Diego F. S. Souza (diego.f.s.souza@ufms.br) and Thiago Ferronatto
- * (thiago.ferronatto@ufms.br)
- * @brief Implementations of the functions documented @ genetic_distance.cuh.
- * @version 1.0
- * @date 2022-10-18
+ * @file dist_par.cu
+ * @authors Diego F. S. Souza and Thiago Ferronatto
  *
  * @copyright Copyright (c) 2022
  */
 
 #include <cooperative_groups.h>
 
+#include <cstdint>
 #include <cstdio>
+#include <ctime>
 
-#include "../include/genetic_distance.cuh"
-
+/**
+ * @brief Simple macro to check a CUDA function call for errors.
+ */
 #define CHECK(ans) \
   cuda_assignment::algorithm::CheckError(ans, __FILE__, __LINE__)
 
 namespace cuda_assignment {
+namespace types {
+
+using U16 = uint16_t;
+using U32 = uint32_t;
+
+/// @brief These should make it easier to read the sequences from a file.
+enum Base { kA = 'A', kC = 'C', kG = 'G', kT = 'T' };
+
+}  // namespace types
+
 namespace algorithm {
 
+/**
+ * @brief Function for use inside a macro to check CUDA function calls for
+ * errors.
+ *
+ * @param error CUDA error code.
+ * @param file Name of the source file where the error code was returned.
+ * @param line Line of the source file where the error code was returned.
+ */
 static inline void CheckError(cudaError_t error, const char* file, int line) {
   const auto& GetErr = cudaGetErrorString;
   if (error != cudaSuccess) {
@@ -33,6 +50,17 @@ static inline void CheckError(cudaError_t error, const char* file, int line) {
   }
 }
 
+/**
+ * @brief Calculates the value of cell (i, j) of the DP table based on the
+ * recurrence relation described inside.
+ *
+ * @param sequence_r Input DNA sequence, presumed longer than the second.
+ * @param sequence_s Input DNA sequence, presumed shorter than the first.
+ * @param i Row of the cell to be populated.
+ * @param j Column of the cell to be populated.
+ * @param r_length Length of the first DNA sequence.
+ * @param dp_table DP table to be populated.
+ */
 __device__ inline void CalcCell(const types::Base* sequence_r,
                                 const types::Base* sequence_s, types::U16 i,
                                 types::U16 j, types::U16 r_length,
@@ -52,6 +80,17 @@ __device__ inline void CalcCell(const types::Base* sequence_r,
   dp_table[i * (r_length + 1) + j] = umin(umin(left, top), top_left);
 }
 
+/**
+ * @brief Goes through every anti-diagonal of the DP table and populates cells
+ * based on the previous two anti-diagonals according to the DP algorithm used.
+ *
+ * @param sequence_r Input DNA sequence, presumed longer than the second.
+ * @param sequence_s Input DNA sequence, presumed shorter than the first.
+ * @param r_length Length of the first DNA sequence.
+ * @param s_length Length of the second DNA sequence.
+ * @param dp_table DP table to be populated. Final result will be at position
+ * (s_length, r_length).
+ */
 __global__ void SolveDPP(const types::Base* sequence_r,
                          const types::Base* sequence_s, types::U16 r_length,
                          types::U16 s_length, types::U16* dp_table) {
@@ -88,6 +127,16 @@ __global__ void SolveDPP(const types::Base* sequence_r,
   }
 }
 
+/**
+ * @brief Allocates device memory, transfers input data into the device,
+ * launches the kernel, transfers output data back to host and cleans up.
+ *
+ * @param h_sequence_r Input DNA sequence, presumed longer than the second.
+ * @param h_sequence_s Input DNA sequence, presumed shorter than the first.
+ * @param r_length Length of the first DNA sequence.
+ * @param s_length Length of the second DNA sequence.
+ * @return U16 Shortest genetic distance between the two sequences.
+ */
 __host__ types::U16 LaunchKernel(const types::Base* h_sequence_r,
                                  const types::Base* h_sequence_s,
                                  types::U16 r_length, types::U16 s_length) {
@@ -153,3 +202,56 @@ __host__ types::U16 LaunchKernel(const types::Base* h_sequence_r,
 
 }  // namespace algorithm
 }  // namespace cuda_assignment
+
+/**
+ * @brief Reads input from a file, launches the kernel and outputs result and
+ * execution time into stdout.
+ *
+ * @param argc Number of command-line arguments.
+ * @param argv Array with command-line arguments.
+ * @param envp Unused. Array with environment variables.
+ * @return int Program termination status. Zero if successful.
+ */
+int main(int argc, char** argv, char** envp) {
+  namespace ca = cuda_assignment;
+
+  // Checking number of command-line arguments, exiting on failure
+  if (argc != 2) exit(fputs("Syntax: ./program <input file path>\n", stderr));
+
+  // Trying to open input file, exiting on failure
+  FILE* input_file_handle = fopen(argv[1], "r");
+  if (!input_file_handle) exit(fputs("Input file not found\n", stderr));
+
+  // Reading lengths of both DNA sequences
+  ca::types::U16 s_length, r_length;
+  fscanf(input_file_handle, "%hu %hu", &s_length, &r_length);
+  fgetc(input_file_handle);
+
+  // Reading shorter DNA sequence
+  ca::types::Base* sequence_s = new ca::types::Base[s_length];
+  for (ca::types::U16 i = 0; i < s_length; i++)
+    sequence_s[i] = (ca::types::Base)fgetc(input_file_handle);
+  fgetc(input_file_handle);
+
+  // Reading longer DNA sequence
+  ca::types::Base* sequence_r = new ca::types::Base[r_length];
+  for (ca::types::U16 i = 0; i < r_length; i++)
+    sequence_r[i] = (ca::types::Base)fgetc(input_file_handle);
+
+  // Cleaning up
+  fclose(input_file_handle);
+
+  // Using C's internal clock for perf measuring, fight me
+  clock_t start = clock();
+
+  // All the boilerplate for launching the kernel
+  const ca::types::U16 result =
+      ca::algorithm::LaunchKernel(sequence_r, sequence_s, r_length, s_length);
+
+  clock_t end = clock();
+
+  // Finally printing the results
+  printf("%hu\n%ld\n", result, end - start);
+
+  return 0;
+}

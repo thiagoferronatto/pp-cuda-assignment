@@ -1,4 +1,6 @@
+.gitignore
 .vscode
-bin
-build
+*.exe
+*.exp
+*.lib
 input
