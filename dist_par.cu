@@ -135,6 +135,8 @@ __global__ void SolveDPP(const types::Base* sequence_r,
  * @param h_sequence_s Input DNA sequence, presumed shorter than the first.
  * @param r_length Length of the first DNA sequence.
  * @param s_length Length of the second DNA sequence.
+ * @param elapsed_time LValue reference to variable that will hold the amount of
+ * time the kernel took to compute the data.
  * @return U16 Shortest genetic distance between the two sequences.
  */
 __host__ types::U16 LaunchKernel(const types::Base* h_sequence_r,
