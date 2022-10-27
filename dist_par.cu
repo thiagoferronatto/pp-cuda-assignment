@@ -139,7 +139,8 @@ __global__ void SolveDPP(const types::Base* sequence_r,
  */
 __host__ types::U16 LaunchKernel(const types::Base* h_sequence_r,
                                  const types::Base* h_sequence_s,
-                                 types::U16 r_length, types::U16 s_length) {
+                                 types::U16 r_length, types::U16 s_length,
+                                 float& elapsed_time) {
   const types::U32 size = (s_length + 1) * (r_length + 1);
 
   // Allocating global device memory for the table and the two sequences
@@ -149,6 +150,11 @@ __host__ types::U16 LaunchKernel(const types::Base* h_sequence_r,
   CHECK(cudaMalloc(&d_dp_table, size * sizeof(types::U16)));
   CHECK(cudaMalloc(&d_sequence_r, r_length * sizeof(types::Base)));
   CHECK(cudaMalloc(&d_sequence_s, s_length * sizeof(types::Base)));
+
+  // Preparing events for time measurement
+  cudaEvent_t start, end;
+  cudaEventCreate(&start);
+  cudaEventCreate(&end);
 
   // Transferring input data from host to device
   CHECK(cudaMemcpy(d_sequence_r, h_sequence_r, r_length * sizeof(types::Base),
@@ -175,15 +181,25 @@ __host__ types::U16 LaunchKernel(const types::Base* h_sequence_r,
   void* args[5]{&d_sequence_r, &d_sequence_s, &r_length, &s_length,
                 &d_dp_table};
 
+  // Starting time measurement
+  CHECK(cudaEventRecord(start));
+
   // Launching cooperative kernel
   CHECK(cudaLaunchCooperativeKernel((const void*)SolveDPP, (dim3)grid_size,
                                     (dim3)block_size, (void**)args, (size_t)0,
                                     (cudaStream_t)0));
 
+  // Ending time measurement
+  CHECK(cudaEventRecord(end));
+
   // Transferring output data from device to host
   types::U16 h_result;
   CHECK(cudaMemcpy(&h_result, &d_dp_table[s_length * (r_length + 1) + r_length],
                    sizeof(types::U16), cudaMemcpyDeviceToHost));
+
+  // Calculating elapsed time
+  CHECK(cudaEventSynchronize(end));
+  CHECK(cudaEventElapsedTime(&elapsed_time, start, end));
 
   // Freeing device global memory
   CHECK(cudaFree(d_dp_table));
@@ -237,17 +253,13 @@ int main(int argc, char** argv, char** envp) {
   // Cleaning up
   fclose(input_file_handle);
 
-  // Using C's internal clock for perf measuring, fight me
-  clock_t start = clock();
-
   // All the boilerplate for launching the kernel
-  const ca::types::U16 result =
-      ca::algorithm::LaunchKernel(sequence_r, sequence_s, r_length, s_length);
-
-  clock_t end = clock();
+  float elapsed_time = 0;
+  const ca::types::U16 result = ca::algorithm::LaunchKernel(
+      sequence_r, sequence_s, r_length, s_length, elapsed_time);
 
   // Finally printing the results
-  printf("%hu\n%ld\n", result, end - start);
+  printf("%hu\n%g ms\n", result, elapsed_time);
 
   return 0;
 }
