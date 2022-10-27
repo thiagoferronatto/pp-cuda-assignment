@@ -153,8 +153,8 @@ __host__ types::U16 LaunchKernel(const types::Base* h_sequence_r,
 
   // Preparing events for time measurement
   cudaEvent_t start, end;
-  cudaEventCreate(&start);
-  cudaEventCreate(&end);
+  CHECK(cudaEventCreate(&start));
+  CHECK(cudaEventCreate(&end));
 
   // Transferring input data from host to device
   CHECK(cudaMemcpy(d_sequence_r, h_sequence_r, r_length * sizeof(types::Base),
