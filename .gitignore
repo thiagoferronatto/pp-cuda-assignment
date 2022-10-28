@@ -3,5 +3,6 @@
 *.exe
 *.exp
 *.lib
+bin
 build
 input

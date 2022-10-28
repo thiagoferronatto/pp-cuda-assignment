@@ -97,6 +97,9 @@ __global__ void SolveDPP(const types::Base* sequence_r,
   const types::U16 global_id = blockIdx.x * blockDim.x + threadIdx.x;
   const types::U16 grid_size = blockDim.x * gridDim.x;
 
+  // Getting access to the whole grid for synchronization purposes
+  cooperative_groups::grid_group grid = cooperative_groups::this_grid();
+
   // Initializing first row and column
   types::U16 grids_per_row = (r_length + grid_size - 1) / grid_size;
   for (types::U16 k = 0; k < grids_per_row; k++) {
@@ -105,8 +108,7 @@ __global__ void SolveDPP(const types::Base* sequence_r,
     if (curr_id <= s_length) dp_table[curr_id * (r_length + 1)] = curr_id;
   }
 
-  // Getting access to the whole grid for synchronization purposes
-  cooperative_groups::grid_group grid = cooperative_groups::this_grid();
+  grid.sync();
 
   // Goes through every anti-diagonal in the DP table
   for (types::U16 d = 2, i, j; d < s_length + r_length + 1; d++) {
