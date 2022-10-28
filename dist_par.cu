@@ -4,7 +4,7 @@
  * Go ahead and compile with `nvcc dist_par.cu -o dist_par`
  *
  * @file dist_par.cu
- * @authors Diego F. S. Souza and Thiago Ferronatto
+ * @authors Diego F. S. Souza and Rafael H. Suguimoto and Thiago Ferronatto
  *
  * @copyright Copyright (c) 2022
  */
